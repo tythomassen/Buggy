@@ -1,4 +1,4 @@
-// import { useSignUp } from "@clerk/clerk-expo";
+// import { useSignUp } from "@clerk/clerk-expo"; *****
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { Alert, Image, ScrollView, Text, View } from "react-native";
@@ -6,6 +6,7 @@ import { ReactNativeModal } from "react-native-modal";
 
 import CustomButton from "../../components/CustomButton";
 import InputField from "../../components/InputField";
+import OAuth from "../../components/OAuth";
 import { icons, images } from "../../constants";
 
 /**
@@ -13,7 +14,7 @@ import { icons, images } from "../../constants";
  */
 const SignUp = () => {
   // 1. Clerk's useSignUp hook provides the logic for creating and verifying accounts.
-  // const { isLoaded, signUp, setActive } = useSignUp();
+  // const { isLoaded, signUp, setActive } = useSignUp(); *****
 
   // 2. State for the main sign-up form (name, email, password).
   const [form, setForm] = useState({
@@ -34,7 +35,7 @@ const SignUp = () => {
    * Sends the user's details to Clerk and triggers the verification email.
    */
   const onSignUpPress = async () => {
-    // if (!isLoaded) return;
+    // if (!isLoaded) return; *****
     
     // TEMPORARY: Skip Clerk and just show verification modal
     setVerification({
@@ -43,25 +44,25 @@ const SignUp = () => {
     });
 
     /*
-    try {
-      // Create a new sign-up attempt with Clerk.
-      await signUp.create({
-        emailAddress: form.email,
-        password: form.password,
-      });
+    try { *****
+      // Create a new sign-up attempt with Clerk. *****
+      await signUp.create({ *****
+        emailAddress: form.email, *****
+        password: form.password, *****
+      }); *****
 
-      // Prepare the email verification (sends a code to the user).
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      // Prepare the email verification (sends a code to the user). *****
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" }); *****
 
-      // Open the verification modal by setting the state to 'pending'.
-      setVerification({
-        ...verification,
-        state: "pending",
-      });
-    } catch (err: any) {
-      // Basic error handling for common sign-up issues (e.g., email already taken).
-      Alert.alert("Error", err.errors[0].longMessage);
-    }
+      // Open the verification modal by setting the state to 'pending'. *****
+      setVerification({ *****
+        ...verification, *****
+        state: "pending", *****
+      }); *****
+    } catch (err: any) { *****
+      // Basic error handling for common sign-up issues (e.g., email already taken). *****
+      Alert.alert("Error", err.errors[0].longMessage); *****
+    } *****
     */
   };
 
@@ -70,7 +71,7 @@ const SignUp = () => {
    * Sends the 6-digit code from the modal back to Clerk to finalize the account.
    */
   const onPressVerify = async () => {
-    // if (!isLoaded) return;
+    // if (!isLoaded) return; *****
 
     // TEMPORARY: Skip Clerk and just show success modal
     setVerification({
@@ -79,33 +80,33 @@ const SignUp = () => {
     });
 
     /*
-    try {
-      // Attempt to verify the email code.
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code: verification.code,
-      });
+    try { *****
+      // Attempt to verify the email code. *****
+      const completeSignUp = await signUp.attemptEmailAddressVerification({ *****
+        code: verification.code, *****
+      }); *****
 
-      // If successful, set the active session and show the success modal.
-      if (completeSignUp.status === "complete") {
-        await setActive({ session: completeSignUp.createdSessionId });
-        setVerification({
-          ...verification,
-          state: "success",
-        });
-      } else {
-        setVerification({
-          ...verification,
-          error: "Verification failed. Please try again.",
-          state: "failed",
-        });
-      }
-    } catch (err: any) {
-      setVerification({
-        ...verification,
-        error: err.errors[0].longMessage,
-        state: "failed",
-      });
-    }
+      // If successful, set the active session and show the success modal. *****
+      if (completeSignUp.status === "complete") { *****
+        await setActive({ session: completeSignUp.createdSessionId }); *****
+        setVerification({ *****
+          ...verification, *****
+          state: "success", *****
+        }); *****
+      } else { *****
+        setVerification({ *****
+          ...verification, *****
+          error: "Verification failed. Please try again.", *****
+          state: "failed", *****
+        }); *****
+      } *****
+    } catch (err: any) { *****
+      setVerification({ *****
+        ...verification, *****
+        error: err.errors[0].longMessage, *****
+        state: "failed", *****
+      }); *****
+    } *****
     */
   };
 
@@ -155,7 +156,7 @@ const SignUp = () => {
           />
 
           {/* Social login option (Google). */}
-          {/* <OAuth /> */}
+          <OAuth />
 
           {/* Navigation link for users who already have an account. */}
           <Link

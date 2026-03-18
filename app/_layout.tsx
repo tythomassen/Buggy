@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-// import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo'
+// import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo' *****
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -49,11 +49,11 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-// if (!publishableKey) {
-//   throw new Error(
-//     'Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env',
-//   )
-// }
+// if (!publishableKey) { *****
+//   throw new Error( *****
+//     'Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env', *****
+//   ) *****
+// } *****
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -78,8 +78,8 @@ export default function RootLayout() {
   }
 
   return (
-    // <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-    //   <ClerkLoaded>
+    // <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}> *****
+    //   <ClerkLoaded> *****
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -90,7 +90,7 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>
-    //   </ClerkLoaded>
-    // </ClerkProvider>
+    //   </ClerkLoaded> *****
+    // </ClerkProvider> *****
   );
 }
