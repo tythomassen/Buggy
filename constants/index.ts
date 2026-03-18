@@ -83,9 +83,9 @@ export const onboarding = [
   },
   {
     id: 2,
-    title: "Best car in your hands with Ryde",
+    title: "Explore Cape May with Buggy",
     description:
-      "Discover the convenience of finding your perfect ride with Ryde",
+      "Quick, Affordable, and Reliable Rides ",
     image: images.onboarding2,
   },
   {
