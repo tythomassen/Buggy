@@ -1,4 +1,4 @@
-import { useSignUp } from "@clerk/clerk-expo";
+// import { useSignUp } from "@clerk/clerk-expo";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { Alert, Image, ScrollView, Text, View } from "react-native";
@@ -13,7 +13,7 @@ import { icons, images } from "../../constants";
  */
 const SignUp = () => {
   // 1. Clerk's useSignUp hook provides the logic for creating and verifying accounts.
-  const { isLoaded, signUp, setActive } = useSignUp();
+  // const { isLoaded, signUp, setActive } = useSignUp();
 
   // 2. State for the main sign-up form (name, email, password).
   const [form, setForm] = useState({
@@ -34,8 +34,15 @@ const SignUp = () => {
    * Sends the user's details to Clerk and triggers the verification email.
    */
   const onSignUpPress = async () => {
-    if (!isLoaded) return;
+    // if (!isLoaded) return;
+    
+    // TEMPORARY: Skip Clerk and just show verification modal
+    setVerification({
+      ...verification,
+      state: "pending",
+    });
 
+    /*
     try {
       // Create a new sign-up attempt with Clerk.
       await signUp.create({
@@ -55,6 +62,7 @@ const SignUp = () => {
       // Basic error handling for common sign-up issues (e.g., email already taken).
       Alert.alert("Error", err.errors[0].longMessage);
     }
+    */
   };
 
   /**
@@ -62,8 +70,15 @@ const SignUp = () => {
    * Sends the 6-digit code from the modal back to Clerk to finalize the account.
    */
   const onPressVerify = async () => {
-    if (!isLoaded) return;
+    // if (!isLoaded) return;
 
+    // TEMPORARY: Skip Clerk and just show success modal
+    setVerification({
+      ...verification,
+      state: "success",
+    });
+
+    /*
     try {
       // Attempt to verify the email code.
       const completeSignUp = await signUp.attemptEmailAddressVerification({
@@ -91,6 +106,7 @@ const SignUp = () => {
         state: "failed",
       });
     }
+    */
   };
 
   return (
