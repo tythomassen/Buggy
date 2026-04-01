@@ -103,7 +103,7 @@ export default function Page() {
               <Text className="text-xl capitalize font-JakartaExtraBold">
                 Welcome,{" "}
                 {user?.firstName ||
-                  user?.emailAddresses[0].emailAddress.split("@")[0]}
+                  user?.emailAddresses?.[0]?.emailAddress?.split("@")[0]}
                 👋
               </Text>
               <TouchableOpacity

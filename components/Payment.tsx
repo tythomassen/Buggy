@@ -62,7 +62,7 @@ const Payment = ({
           );
 
           if (paymentIntent.client_secret) {
-            const { result } = await fetchAPI("/(api)/(stripe)/pay", {
+            const payResponse = await fetchAPI("/(api)/(stripe)/pay", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -75,7 +75,7 @@ const Payment = ({
               }),
             });
 
-            if (result.client_secret) {
+            if (payResponse?.success) {
               await fetchAPI("/(api)/ride/create", {
                 method: "POST",
                 headers: {
@@ -97,7 +97,7 @@ const Payment = ({
               });
 
               intentCreationCallback({
-                clientSecret: result.client_secret,
+                clientSecret: paymentIntent.client_secret,
               });
             }
           }

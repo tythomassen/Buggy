@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       payment_method: paymentMethod.id,
     });
 
-    return Response.json({ success: true, message: result });
+    return Response.json({ data: { success: true, result } });
   } catch (error) {
     console.error("Error paying:", error);
     return Response.json({ error: "Internal Server Error" }, { status: 500 });
