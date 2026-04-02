@@ -18,7 +18,6 @@ import { fetchAPI } from "@/lib/fetch";
 
 const SignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -147,12 +146,7 @@ const SignUp = () => {
         </View>
 
         <ReactNativeModal
-          isVisible={verification.state === "pending"}
-          onModalHide={() => {
-            if (verification.state === "success") {
-              setShowSuccessModal(true);
-            }
-          }}
+          isVisible={verification.state === "pending" || verification.state === "failed"}
         >
           <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
             <Text className="font-JakartaExtraBold text-2xl mb-2">
@@ -184,25 +178,6 @@ const SignUp = () => {
           </View>
         </ReactNativeModal>
 
-        <ReactNativeModal isVisible={showSuccessModal}>
-          <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
-            <Image
-              source={images.check}
-              className="w-[110px] h-[110px] mx-auto my-5"
-            />
-            <Text className="text-3xl font-JakartaBold text-center">
-              Verified
-            </Text>
-            <Text className="text-base text-gray-400 font-Jakarta text-center mt-2">
-              You have successfully verified your account.
-            </Text>
-            <CustomButton
-              title="Browse Home"
-              onPress={() => router.push("/(root)/(tabs)/home")}
-              className="mt-5"
-            />
-          </View>
-        </ReactNativeModal>
       </View>
     </ScrollView>
   );

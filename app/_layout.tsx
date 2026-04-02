@@ -28,6 +28,8 @@ export default function RootLayout() {
     "Plus-Jakarta-Sans-Medium": require("../assets/fonts/PlusJakartaSans-Medium.ttf"),
     "Plus-Jakarta-Sans-Regular": require("../assets/fonts/PlusJakartaSans-Regular.ttf"),
     "Plus-Jakarta-Sans-SemiBold": require("../assets/fonts/PlusJakartaSans-SemiBold.ttf"),
+    "Gordita-Bold": require("../assets/fonts/Gordita-Bold.ttf"),
+    "LibreBodoni-BoldItalic": require("../assets/fonts/LibreBodoni-BoldItalic.ttf"),
   });
 
   useEffect(() => {
