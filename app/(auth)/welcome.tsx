@@ -4,120 +4,136 @@ import {
   Dimensions,
   Image,
   ImageBackground,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Swiper from "react-native-swiper";
 
-const { height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 const slides = [
   {
     id: 1,
     title: "Explore Cape May ",
-    description:
-      "Your journey begins with Buggy. Find your ideal ride effortlessly.",
+    description: "Your journey begins with Buggy. Find your ideal ride effortlessly.",
+    bg: require("@/assets/images/cape-may.webp"),
   },
   {
     id: 2,
     title: "Best car in your\nhands with BUG2",
-    description:
-      "Discover the convenience of finding your perfect drive with BUG2.",
+    description: "Discover the convenience of finding your perfect drive with BUG2.",
+    bg: require("@/assets/images/lighthouseWelcome.png"),
   },
   {
     id: 3,
     title: "Your ride, your\nway. Let's go!",
-    description:
-      "Enter your destination address and let us take care of the rest.",
+    description: "Enter your destination address and let us take care of the rest.",
+    bg: require("@/assets/images/cape-may-beach.jpg"),
   },
 ];
 
 const Welcome = () => {
-  const swiperRef = useRef<Swiper>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / width);
+    setActiveIndex(index);
+  };
 
   return (
     <View style={{ flex: 1 }}>
-      <ImageBackground
-        source={require("@/assets/images/cape-may.webp")}
+      {/* Slides — each with its own background */}
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={handleScroll}
         style={{ flex: 1 }}
-        resizeMode="cover"
       >
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          <View style={styles.overlay} />
+        {slides.map((slide) => (
+          <ImageBackground
+            key={slide.id}
+            source={slide.bg}
+            style={[styles.slide, { width }]}
+            resizeMode="cover"
+          >
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
+              <View style={styles.overlay} />
+            </View>
+            <View style={styles.slideContent}>
+              <Text style={styles.title}>{slide.title}</Text>
+              <Text style={styles.description}>{slide.description}</Text>
+            </View>
+          </ImageBackground>
+        ))}
+      </ScrollView>
+
+      {/* Logo + buttons float on top */}
+      <SafeAreaView style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        <View style={styles.logoContainer} pointerEvents="none">
+          <Image
+            source={require("@/assets/images/buggyicon.png")}
+            style={styles.logoIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.logoText}>Buggy</Text>
         </View>
 
-        <SafeAreaView style={{ flex: 1 }}>
-          {/* App name at top */}
-          <View style={styles.logoContainer}>
-            <Image
-              source={require("@/assets/images/buggyicon.png")}
-              style={styles.logoIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.logoText}>Buggy</Text>
+        <View style={{ flex: 1 }} pointerEvents="none" />
+
+        <View style={styles.bottomContainer}>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => router.replace("/(auth)/sign-in")}
+            >
+              <Text style={styles.buttonText}>Log In</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => router.replace("/(auth)/sign-up")}
+            >
+              <Text style={styles.buttonText}>Sign Up</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Swipeable slides */}
-          <Swiper
-            ref={swiperRef}
-            loop={false}
-            showsPagination={false}
-            onIndexChanged={(index) => setActiveIndex(index)}
-            style={{ flex: 1 }}
-          >
-            {slides.map((slide) => (
-              <View key={slide.id} style={styles.slide}>
-                <Text style={styles.title}>{slide.title}</Text>
-                <Text style={styles.description}>{slide.description}</Text>
-              </View>
+          <View style={styles.dotsContainer}>
+            {slides.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  activeIndex === index ? styles.dotActive : styles.dotInactive,
+                ]}
+              />
             ))}
-          </Swiper>
-
-          {/* Buttons + dots pinned to bottom */}
-          <View style={styles.bottomContainer}>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => router.replace("/(auth)/sign-in")}
-              >
-                <Text style={styles.buttonText}>Log In</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => router.replace("/(auth)/sign-up")}
-              >
-                <Text style={styles.buttonText}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Dot indicators */}
-            <View style={styles.dotsContainer}>
-              {slides.map((_, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.dot,
-                    activeIndex === index ? styles.dotActive : styles.dotInactive,
-                  ]}
-                />
-              ))}
-            </View>
           </View>
-        </SafeAreaView>
-      </ImageBackground>
+        </View>
+      </SafeAreaView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  slide: {
+    flex: 1,
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0, 0, 0, 0.48)",
+  },
+  slideContent: {
+    flex: 1,
+    justifyContent: "flex-end",
+    paddingHorizontal: 24,
+    paddingBottom: 175, // How far text is from bottom of screen
   },
   logoContainer: {
     flexDirection: "row",
@@ -135,12 +151,6 @@ const styles = StyleSheet.create({
     fontSize: 60,
     fontFamily: "LibreBodoni-BoldItalic",
     letterSpacing: 1,
-  },
-  slide: {
-    flex: 1,
-    justifyContent: "flex-end",
-    paddingHorizontal: 24,
-    paddingBottom: 24,
   },
   title: {
     color: "white",
