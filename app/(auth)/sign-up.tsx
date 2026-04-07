@@ -1,4 +1,4 @@
-import { useSignUp } from "@clerk/clerk-expo";
+import { useSignUp, useOAuth } from "@clerk/clerk-expo";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
@@ -6,18 +6,21 @@ import {
   Image,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { ReactNativeModal } from "react-native-modal";
 
-import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
-import OAuth from "@/components/OAuth";
-import { icons, images } from "@/constants";
+import { icons } from "@/constants";
 import { fetchAPI } from "@/lib/fetch";
+import { googleOAuth } from "@/lib/auth";
 
 const SignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
+  const { startOAuthFlow: startGoogleOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const { startOAuthFlow: startAppleOAuthFlow } = useOAuth({ strategy: "oauth_apple" });
+  const [oauthLoading, setOauthLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -41,10 +44,7 @@ const SignUp = () => {
 
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
 
-      setVerification({
-        ...verification,
-        state: "pending",
-      });
+      setVerification({ ...verification, state: "pending" });
     } catch (err: any) {
       console.log(JSON.stringify(err, null, 2));
       Alert.alert("Error", err.errors[0].longMessage);
@@ -65,9 +65,7 @@ const SignUp = () => {
         try {
           await fetchAPI("/(api)/user", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               name: form.name || form.email.split("@")[0],
               email: form.email,
@@ -79,7 +77,7 @@ const SignUp = () => {
         }
 
         setVerification({ ...verification, state: "success" });
-        router.replace("/(root)/(tabs)/home");
+        setTimeout(() => router.replace("/(root)/(tabs)/home"), 300);
       } else {
         setVerification({
           ...verification,
@@ -96,89 +94,202 @@ const SignUp = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    if (oauthLoading) return;
+    setOauthLoading(true);
+    try {
+      const result = await googleOAuth(startGoogleOAuthFlow);
+      if (result.code === "session_exists" || result.success) {
+        router.replace("/(root)/(tabs)/home");
+        return;
+      }
+      Alert.alert("Error", result.message);
+    } finally {
+      setOauthLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    if (oauthLoading) return;
+    setOauthLoading(true);
+    try {
+      const { createdSessionId, setActive } = await startAppleOAuthFlow({
+        redirectUrl: "myapp://",
+      });
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+        router.replace("/(root)/(tabs)/home");
+      }
+    } catch (err: any) {
+      console.error("Apple sign in error:", err);
+      Alert.alert("Error", err?.errors?.[0]?.longMessage ?? "Apple sign in failed.");
+    } finally {
+      setOauthLoading(false);
+    }
+  };
+
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="flex-1 bg-white">
-        <View className="relative w-full h-[250px]">
-          <Image source={images.signUpCar} className="z-0 w-full h-[250px]" />
-          <Text className="text-2xl text-black font-JakartaSemiBold absolute bottom-5 left-5">
-            Create Your Account
+    <ScrollView style={{ flex: 1, backgroundColor: "#F5F0E8" }}>
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 60 }}>
+
+        {/* Header */}
+        <View style={{ alignItems: "center", marginBottom: 10, marginTop: 40 }}>  
+          <Text style={{ fontSize: 46, fontFamily: "LibreBodoni-BoldItalic", color: "#1a2e35", letterSpacing: 1 }}>
+            Buggy
+          </Text>
+          <Text style={{ fontSize: 16, color: "#5c6b70", marginTop: 8, fontFamily: "Plus-Jakarta-Sans-Regular" }}>
+            Create your account
           </Text>
         </View>
-        <View className="p-5">
-          <InputField
-            label="Name"
-            placeholder="Enter name"
-            icon={icons.person}
-            value={form.name}
-            onChangeText={(value) => setForm({ ...form, name: value })}
-          />
-          <InputField
-            label="Email"
-            placeholder="Enter email"
-            icon={icons.email}
-            textContentType="emailAddress"
-            value={form.email}
-            onChangeText={(value) => setForm({ ...form, email: value })}
-          />
-          <InputField
-            label="Password"
-            placeholder="Enter password"
-            icon={icons.lock}
-            secureTextEntry={true}
-            textContentType="password"
-            value={form.password}
-            onChangeText={(value) => setForm({ ...form, password: value })}
-          />
-          <CustomButton
-            title="Sign Up"
-            onPress={onSignUpPress}
-            className="mt-6"
-          />
-          <OAuth />
-          <Link
-            href="/(auth)/sign-in"
-            className="text-lg text-center text-general-200 mt-10"
-          >
-            Already have an account?{" "}
-            <Text className="text-primary-500">Log In</Text>
-          </Link>
+
+        {/* Inputs */}
+        <InputField
+          label="Name"
+          placeholder="Enter name"
+          icon={icons.person}
+          value={form.name}
+          onChangeText={(value) => setForm({ ...form, name: value })}
+        />
+        <InputField
+          label="Email"
+          placeholder="Enter email"
+          icon={icons.email}
+          textContentType="emailAddress"
+          value={form.email}
+          onChangeText={(value) => setForm({ ...form, email: value })}
+        />
+        <InputField
+          label="Password"
+          placeholder="Enter password"
+          icon={icons.lock}
+          secureTextEntry={true}
+          textContentType="password"
+          value={form.password}
+          onChangeText={(value) => setForm({ ...form, password: value })}
+        />
+
+        {/* Sign Up Button */}
+        <TouchableOpacity
+          onPress={onSignUpPress}
+          style={{
+            backgroundColor: "#1a2e35",
+            borderRadius: 14,
+            paddingVertical: 16,
+            alignItems: "center",
+            marginTop: 24,
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 16, fontFamily: "Plus-Jakarta-Sans-Bold" }}>
+            Sign Up
+          </Text>
+        </TouchableOpacity>
+
+        {/* Divider */}
+        <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 20 }}>
+          <View style={{ flex: 1, height: 1, backgroundColor: "#d4cfc8" }} />
+          <Text style={{ marginHorizontal: 12, color: "#8a8078", fontFamily: "Plus-Jakarta-Sans-Regular" }}>Or</Text>
+          <View style={{ flex: 1, height: 1, backgroundColor: "#d4cfc8" }} />
         </View>
 
-        <ReactNativeModal
-          isVisible={verification.state === "pending" || verification.state === "failed"}
+        {/* Google Button */}
+        <TouchableOpacity
+          onPress={handleGoogleSignIn}
+          disabled={oauthLoading}
+          style={{
+            backgroundColor: "#dfc925",
+            borderRadius: 14,
+            paddingVertical: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 12,
+          }}
         >
-          <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
-            <Text className="font-JakartaExtraBold text-2xl mb-2">
-              Verification
-            </Text>
-            <Text className="font-Jakarta mb-5">
-              We've sent a verification code to {form.email}.
-            </Text>
-            <InputField
-              label={"Code"}
-              icon={icons.lock}
-              placeholder={"12345"}
-              value={verification.code}
-              keyboardType="numeric"
-              onChangeText={(code) =>
-                setVerification({ ...verification, code })
-              }
-            />
-            {verification.error && (
-              <Text className="text-red-500 text-sm mt-1">
-                {verification.error}
-              </Text>
-            )}
-            <CustomButton
-              title="Verify Email"
-              onPress={onPressVerify}
-              className="mt-5 bg-success-500"
-            />
-          </View>
-        </ReactNativeModal>
+          <Image source={icons.google} style={{ width: 20, height: 20, marginRight: 10 }} resizeMode="contain" />
+          <Text style={{ fontSize: 16, fontFamily: "Plus-Jakarta-Sans-SemiBold", color: "#fff" }}>
+            Continue with Google
+          </Text>
+        </TouchableOpacity>
+
+        {/* Apple Button */}
+        <TouchableOpacity
+          onPress={handleAppleSignIn}
+          disabled={oauthLoading}
+          style={{
+            backgroundColor: "#dfc925",
+            borderRadius: 14,
+            paddingVertical: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 24,
+          }}
+        >
+          <Text style={{ fontSize: 20, marginRight: 10, color: "#fff" }}>{'\uF8FF'}</Text>
+          <Text style={{ fontSize: 16, fontFamily: "Plus-Jakarta-Sans-SemiBold", color: "#fff" }}>
+            Continue with Apple
+          </Text>
+        </TouchableOpacity>
+
+        {/* Log In Link */}
+        <Link href="/(auth)/sign-in" style={{ textAlign: "center", marginBottom: 32 }}>
+          <Text style={{ fontSize: 15, color: "#8a8078", fontFamily: "Plus-Jakarta-Sans-Regular" }}>
+            Already have an account?{" "}
+          </Text>
+          <Text style={{ fontSize: 15, color: "#1a2e35", fontFamily: "Plus-Jakarta-Sans-Bold" }}>
+            Log In
+          </Text>
+        </Link>
 
       </View>
+
+      {/* Verification Modal */}
+      <ReactNativeModal
+        isVisible={verification.state === "pending" || verification.state === "failed"}
+      >
+        <View style={{ backgroundColor: "#fff", paddingHorizontal: 28, paddingVertical: 36, borderRadius: 16, minHeight: 300 }}>
+          <TouchableOpacity
+            onPress={() => setVerification({ ...verification, state: "default", error: "" })}
+            style={{ position: "absolute", top: 16, right: 16, padding: 4 }}
+          >
+            <Text style={{ fontSize: 20, color: "#8a8078", lineHeight: 22 }}>✕</Text>
+          </TouchableOpacity>
+          <Text style={{ fontFamily: "Plus-Jakarta-Sans-ExtraBold", fontSize: 22, marginBottom: 8 }}>
+            Verification
+          </Text>
+          <Text style={{ fontFamily: "Plus-Jakarta-Sans-Regular", marginBottom: 20 }}>
+            We've sent a verification code to {form.email}.
+          </Text>
+          <InputField
+            label="Code"
+            icon={icons.lock}
+            placeholder="12345"
+            value={verification.code}
+            keyboardType="numeric"
+            onChangeText={(code) => setVerification({ ...verification, code })}
+          />
+          {verification.error && (
+            <Text style={{ color: "#ef4444", fontSize: 13, marginTop: 4 }}>
+              {verification.error}
+            </Text>
+          )}
+          <TouchableOpacity
+            onPress={onPressVerify}
+            style={{
+              backgroundColor: "#1a2e35",
+              borderRadius: 14,
+              paddingVertical: 16,
+              alignItems: "center",
+              marginTop: 20,
+            }}
+          >
+            <Text style={{ color: "#fff", fontSize: 16, fontFamily: "Plus-Jakarta-Sans-Bold" }}>
+              Verify Email
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ReactNativeModal>
+
     </ScrollView>
   );
 };

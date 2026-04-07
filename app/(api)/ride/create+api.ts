@@ -2,73 +2,47 @@ import { neon } from "@neondatabase/serverless";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const sql = neon(`${process.env.DATABASE_URL}`);
     const {
       origin_address,
-      destination_address,
       origin_latitude,
       origin_longitude,
+      destination_address,
       destination_latitude,
       destination_longitude,
-      ride_time,
-      fare_price,
-      payment_status,
-      driver_id,
       user_id,
-    } = body;
+    } = await request.json();
 
-    if (
-      !origin_address ||
-      !destination_address ||
-      !origin_latitude ||
-      !origin_longitude ||
-      !destination_latitude ||
-      !destination_longitude ||
-      !ride_time ||
-      !fare_price ||
-      !payment_status ||
-      !driver_id ||
-      !user_id
-    ) {
-      return Response.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+    if (!origin_address || !origin_latitude || !origin_longitude || !user_id) {
+      return Response.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const sql = neon(`${process.env.DATABASE_URL}`);
-
-    const response = await sql`
+    const rows = await sql`
       INSERT INTO rides (
         origin_address,
-        destination_address,
         origin_latitude,
         origin_longitude,
+        destination_address,
         destination_latitude,
         destination_longitude,
-        ride_time,
-        fare_price,
-        payment_status,
-        driver_id,
-        user_id
+        user_id,
+        status
       ) VALUES (
         ${origin_address},
-        ${destination_address},
         ${origin_latitude},
         ${origin_longitude},
-        ${destination_latitude},
-        ${destination_longitude},
-        ${ride_time},
-        ${fare_price},
-        ${payment_status},
-        ${driver_id},
-        ${user_id}
+        ${destination_address ?? null},
+        ${destination_latitude ?? null},
+        ${destination_longitude ?? null},
+        ${user_id},
+        'pending'
       )
-      RETURNING *`;
+      RETURNING *
+    `;
 
-    return Response.json({ data: response }, { status: 201 });
-  } catch (error) {
+    return Response.json({ data: rows[0] }, { status: 201 });
+  } catch (error: any) {
     console.error("Error creating ride:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    return Response.json({ error: error?.message ?? String(error) }, { status: 500 });
   }
 }

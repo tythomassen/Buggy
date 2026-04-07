@@ -21,6 +21,7 @@ declare interface MarkerData {
   rating: number;
   first_name: string;
   last_name: string;
+  heading?: number;
   time?: number;
   price?: string;
 }
@@ -67,6 +68,8 @@ declare interface GoogleInputProps {
   initialLocation?: string;
   containerStyle?: string;
   textInputBackgroundColor?: string;
+  placeholder?: string;
+  dropdownAbove?: boolean;
   handlePress: ({
     latitude,
     longitude,

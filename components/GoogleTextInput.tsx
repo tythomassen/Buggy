@@ -12,13 +12,15 @@ const GoogleTextInput = ({
   containerStyle,
   textInputBackgroundColor,
   handlePress,
+  placeholder,
+  dropdownAbove,
 }: GoogleInputProps) => (
   <View
     className={`flex flex-row items-center justify-center relative z-50 rounded-xl ${containerStyle}`}
   >
     <GooglePlacesAutocomplete
       fetchDetails={true}
-      placeholder="Search"
+      placeholder={placeholder ?? "Search"}
       debounce={200}
       styles={{
         textInputContainer: {
@@ -40,15 +42,18 @@ const GoogleTextInput = ({
           borderRadius: 200,
         },
         listView: {
-          backgroundColor: textInputBackgroundColor
-            ? textInputBackgroundColor
-            : "white",
-          position: "relative",
-          top: 0,
-          width: "100%",
+          backgroundColor: "white",
+          position: "absolute",
+          top: dropdownAbove ? undefined : 44,
+          bottom: dropdownAbove ? 44 : undefined,
+          left: 20,
+          right: 0,
           borderRadius: 10,
-          shadowColor: "#d4d4d4",
-          zIndex: 99,
+          shadowColor: "#000",
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 10,
+          zIndex: 999,
         },
       }}
       onPress={(data, details = null) => {
@@ -73,7 +78,7 @@ const GoogleTextInput = ({
       )}
       textInputProps={{
         placeholderTextColor: "gray",
-        placeholder: initialLocation ?? "Where do you want to go?",
+        placeholder: initialLocation ?? (placeholder ?? "Where do you want to go?"),
       }}
     />
   </View>

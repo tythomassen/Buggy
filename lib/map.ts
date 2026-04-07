@@ -12,15 +12,17 @@ export const generateMarkersFromData = ({
   userLongitude: number;
 }): MarkerData[] => {
   return data.map((driver) => {
-    const latOffset = (Math.random() - 0.5) * 0.01;
-    const lngOffset = (Math.random() - 0.5) * 0.01;
+    const d = driver as any;
+    const latitude = d.latitude ?? userLatitude + (Math.random() - 0.5) * 0.01;
+    const longitude = d.longitude ?? userLongitude + (Math.random() - 0.5) * 0.01;
 
     return {
       ...driver,
-      id: driver.driver_id ?? (driver as any).id,
+      id: driver.driver_id ?? d.id,
       title: `${driver.first_name} ${driver.last_name}`,
-      latitude: userLatitude + latOffset,
-      longitude: userLongitude + lngOffset,
+      latitude,
+      longitude,
+      heading: d.heading ?? 0,
     };
   });
 };
@@ -38,10 +40,10 @@ export const calculateRegion = ({
 }) => {
   if (!userLatitude || !userLongitude) {
     return {
-      latitude: 37.78825,
-      longitude: -122.4324,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
+      latitude: 38.9351,
+      longitude: -74.9060,
+      latitudeDelta: 0.014,
+      longitudeDelta: 0.014,
     };
   }
 

@@ -1,4 +1,5 @@
 import BottomSheet, {
+  BottomSheetFlatList,
   BottomSheetScrollView,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
@@ -14,10 +15,18 @@ const RideLayout = ({
   title,
   snapPoints,
   children,
+  flatListData,
+  flatListKeyExtractor,
+  renderFlatListItem,
+  flatListFooter,
 }: {
   title: string;
   snapPoints?: string[];
   children: React.ReactNode;
+  flatListData?: any[];
+  flatListKeyExtractor?: (item: any, index: number) => string;
+  renderFlatListItem?: ({ item }: { item: any }) => React.ReactElement;
+  flatListFooter?: React.ReactElement;
 }) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -49,14 +58,13 @@ const RideLayout = ({
           index={0}
         >
           {title === "Choose a Rider" ? (
-            <BottomSheetView
-              style={{
-                flex: 1,
-                padding: 20,
-              }}
-            >
-              {children}
-            </BottomSheetView>
+            <BottomSheetFlatList
+              data={flatListData}
+              keyExtractor={flatListKeyExtractor}
+              renderItem={renderFlatListItem}
+              ListFooterComponent={flatListFooter}
+              contentContainerStyle={{ padding: 20 }}
+            />
           ) : (
             <BottomSheetScrollView
               style={{

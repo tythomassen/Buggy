@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 export async function POST(request: Request) {
   try {
     const sql = neon(`${process.env.DATABASE_URL}`);
-    const { name, email, clerkId } = await request.json();
+    const { name, email, clerkId, role = "rider" } = await request.json();
 
     if (!name || !email || !clerkId) {
       return Response.json(
@@ -16,11 +16,13 @@ export async function POST(request: Request) {
       INSERT INTO users (
         name,
         email,
-        clerk_id
+        clerk_id,
+        role
       ) VALUES (
         ${name},
         ${email},
-        ${clerkId}
+        ${clerkId},
+        ${role}
       )`;
 
     return Response.json({ data: response }, { status: 201 });

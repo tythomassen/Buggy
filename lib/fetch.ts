@@ -4,7 +4,8 @@ export const fetchAPI = async (url: string, options?: RequestInit) => {
   try {
     const response = await fetch(url, options);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const body = await response.json().catch(() => ({}));
+      throw new Error(`HTTP ${response.status}: ${body?.error ?? "Unknown error"}`);
     }
     return await response.json();
   } catch (error) {

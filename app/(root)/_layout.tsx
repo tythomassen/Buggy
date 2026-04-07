@@ -4,19 +4,11 @@ const Layout = () => {
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(driver)" options={{ headerShown: false }} />
+      <Stack.Screen name="waiting" options={{ headerShown: false }} />
       <Stack.Screen name="find-ride" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="confirm-ride"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="book-ride"
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen name="confirm-ride" options={{ headerShown: false }} />
+      <Stack.Screen name="book-ride" options={{ headerShown: false }} />
     </Stack>
   );
 };
