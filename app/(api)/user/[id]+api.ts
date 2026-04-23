@@ -12,9 +12,9 @@ export async function GET(_request: Request, { id }: { id: string }) {
     `;
 
     if (!rows.length)
-      return Response.json({ error: "User not found" }, { status: 404 });
+      return Response.json({ found: false, role: "rider" });
 
-    return Response.json({ role: rows[0].role });
+    return Response.json({ found: true, role: rows[0].role });
   } catch (error) {
     console.error("Error fetching user role:", error);
     return Response.json({ error: "Internal Server Error" }, { status: 500 });

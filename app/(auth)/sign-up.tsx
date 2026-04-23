@@ -22,6 +22,19 @@ const SignUp = () => {
   const { startOAuthFlow: startAppleOAuthFlow } = useOAuth({ strategy: "oauth_apple" });
   const [oauthLoading, setOauthLoading] = useState(false);
 
+  const routeByRole = async (clerkId: string) => {
+    try {
+      const result = await fetchAPI(`/(api)/user/${clerkId}`);
+      if (result.role === "driver") {
+        router.replace("/(root)/(driver)/dashboard");
+      } else {
+        router.replace("/(root)/(tabs)/home");
+      }
+    } catch {
+      router.replace("/(root)/(tabs)/home");
+    }
+  };
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -47,7 +60,7 @@ const SignUp = () => {
       setVerification({ ...verification, state: "pending" });
     } catch (err: any) {
       console.log(JSON.stringify(err, null, 2));
-      Alert.alert("Error", err.errors[0].longMessage);
+      Alert.alert("Error", err.errors?.[0]?.longMessage ?? "Sign up failed. Please try again.");
     }
   };
 
@@ -77,7 +90,6 @@ const SignUp = () => {
         }
 
         setVerification({ ...verification, state: "success" });
-        setTimeout(() => router.replace("/(root)/(tabs)/home"), 300);
       } else {
         setVerification({
           ...verification,
@@ -100,7 +112,11 @@ const SignUp = () => {
     try {
       const result = await googleOAuth(startGoogleOAuthFlow);
       if (result.code === "session_exists" || result.success) {
-        router.replace("/(root)/(tabs)/home");
+        if (result.userId) {
+          await routeByRole(result.userId);
+        } else {
+          router.replace("/(root)/(tabs)/home");
+        }
         return;
       }
       Alert.alert("Error", result.message);
@@ -113,12 +129,16 @@ const SignUp = () => {
     if (oauthLoading) return;
     setOauthLoading(true);
     try {
-      const { createdSessionId, setActive } = await startAppleOAuthFlow({
+      const { createdSessionId, setActive, createdUserId } = await startAppleOAuthFlow({
         redirectUrl: "myapp://",
       });
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
-        router.replace("/(root)/(tabs)/home");
+        if (createdUserId) {
+          await routeByRole(createdUserId);
+        } else {
+          router.replace("/(root)/(tabs)/home");
+        }
       }
     } catch (err: any) {
       console.error("Apple sign in error:", err);
@@ -246,6 +266,11 @@ const SignUp = () => {
       {/* Verification Modal */}
       <ReactNativeModal
         isVisible={verification.state === "pending" || verification.state === "failed"}
+        onModalHide={() => {
+          if (verification.state === "success") {
+            router.replace("/(root)/(tabs)/home");
+          }
+        }}
       >
         <View style={{ backgroundColor: "#fff", paddingHorizontal: 28, paddingVertical: 36, borderRadius: 16, minHeight: 300 }}>
           <TouchableOpacity

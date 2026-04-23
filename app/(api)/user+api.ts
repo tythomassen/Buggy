@@ -23,7 +23,8 @@ export async function POST(request: Request) {
         ${email},
         ${clerkId},
         ${role}
-      )`;
+      )
+      ON CONFLICT (clerk_id) DO NOTHING`;
 
     return Response.json({ data: response }, { status: 201 });
   } catch (error) {

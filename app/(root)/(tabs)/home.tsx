@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Modal,
   Text,
@@ -26,11 +27,23 @@ export default function Page() {
   const { signOut } = useAuth();
   const [requesting, setRequesting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [pendingNav, setPendingNav] = useState<string | null>(null);
 
-  const handleSignOut = () => {
+  const closeMenuThen = (route: string) => {
+    setPendingNav(route);
     setMenuOpen(false);
-    signOut();
-    router.replace("/(auth)/sign-in");
+  };
+
+  const handleMenuDismiss = () => {
+    if (!pendingNav) return;
+    const route = pendingNav;
+    setPendingNav(null);
+    if (route === "__signout__") {
+      signOut();
+      router.replace("/(auth)/sign-in");
+    } else {
+      router.push(route as any);
+    }
   };
 
   useEffect(() => {
@@ -44,10 +57,14 @@ export default function Page() {
         longitude: location.coords.longitude,
       });
 
+      const label = address[0]
+        ? `${address[0].name ?? ""}, ${address[0].region ?? ""}`.trim().replace(/^,\s*/, "")
+        : "Cape May, NJ";
+
       setUserLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        address: `${address[0].name}, ${address[0].region}`,
+        address: label,
       });
     };
 
@@ -78,6 +95,7 @@ export default function Page() {
       });
     } catch (err) {
       console.error("Failed to create ride request:", err);
+      Alert.alert("Error", "Failed to request a ride. Please try again.");
     } finally {
       setRequesting(false);
     }
@@ -190,8 +208,9 @@ export default function Page() {
       <Modal
         visible={menuOpen}
         transparent
-        animationType="fade"
+        animationType="none"
         onRequestClose={() => setMenuOpen(false)}
+        onDismiss={handleMenuDismiss}
       >
         <TouchableWithoutFeedback onPress={() => setMenuOpen(false)}>
           <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}>
@@ -234,10 +253,7 @@ export default function Page() {
                 ].map((item) => (
                   <TouchableOpacity
                     key={item.label}
-                    onPress={() => {
-                      setMenuOpen(false);
-                      router.push(item.route as any);
-                    }}
+                    onPress={() => closeMenuThen(item.route)}
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
@@ -254,7 +270,7 @@ export default function Page() {
                 ))}
 
                 <TouchableOpacity
-                  onPress={handleSignOut}
+                  onPress={() => closeMenuThen("__signout__")}
                   style={{ flexDirection: "row", alignItems: "center", paddingVertical: 16, marginTop: 8 }}
                 >
                   <Image source={icons.out} style={{ width: 20, height: 20, tintColor: "#ef4444", marginRight: 16 }} resizeMode="contain" />

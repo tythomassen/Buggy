@@ -1,40 +1,92 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 
-import Map from "@/components/Map";
 import { fetchAPI } from "@/lib/fetch";
 
 export default function DriverActiveRide() {
-  const { rideId, pickupAddress, riderName } = useLocalSearchParams<{
+  const { rideId, pickupAddress, pickupLatitude, pickupLongitude, riderName } = useLocalSearchParams<{
     rideId: string;
     pickupAddress: string;
+    pickupLatitude: string;
+    pickupLongitude: string;
     riderName: string;
   }>();
 
+  const [loading, setLoading] = useState(false);
+
   const handleComplete = async () => {
-    await fetchAPI("/(api)/ride/update", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ride_id: rideId, status: "completed" }),
-    });
-    router.replace("/(root)/(driver)/dashboard");
+    setLoading(true);
+    try {
+      await fetchAPI("/(api)/ride/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ride_id: rideId, status: "completed" }),
+      });
+      router.replace("/(root)/(driver)/dashboard");
+    } catch {
+      Alert.alert("Error", "Could not complete ride. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = async () => {
-    await fetchAPI("/(api)/ride/update", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ride_id: rideId, status: "pending", driver_id: null }),
-    });
-    router.replace("/(root)/(driver)/dashboard");
+    Alert.alert(
+      "Cancel Ride",
+      "Are you sure you want to cancel and release this ride?",
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Yes, Cancel",
+          style: "destructive",
+          onPress: async () => {
+            setLoading(true);
+            try {
+              await fetchAPI("/(api)/ride/update", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ride_id: rideId, status: "pending", clear_driver: true }),
+              });
+              router.replace("/(root)/(driver)/dashboard");
+            } catch {
+              Alert.alert("Error", "Could not cancel ride. Please try again.");
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
+
+  const lat = pickupLatitude ? parseFloat(pickupLatitude) : 38.939;
+  const lng = pickupLongitude ? parseFloat(pickupLongitude) : -74.911;
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        <Map />
-      </View>
+      <MapView
+        provider={PROVIDER_DEFAULT}
+        style={{ flex: 1 }}
+        mapType="mutedStandard"
+        showsPointsOfInterest={false}
+        userInterfaceStyle="light"
+        showsUserLocation={true}
+        initialRegion={{
+          latitude: lat,
+          longitude: lng,
+          latitudeDelta: 0.014,
+          longitudeDelta: 0.014,
+        }}
+      >
+        <Marker
+          coordinate={{ latitude: lat, longitude: lng }}
+          title={pickupAddress ?? "Pickup"}
+          pinColor="#1a2e35"
+        />
+      </MapView>
 
       <SafeAreaView edges={["bottom"]} style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}>
         <View
@@ -62,21 +114,27 @@ export default function DriverActiveRide() {
 
           <TouchableOpacity
             onPress={handleComplete}
+            disabled={loading}
             style={{
-              backgroundColor: "#1a2e35",
+              backgroundColor: loading ? "#9ca3af" : "#1a2e35",
               borderRadius: 12,
               paddingVertical: 16,
               alignItems: "center",
               marginTop: 20,
             }}
           >
-            <Text style={{ color: "#fff", fontFamily: "Plus-Jakarta-Sans-Bold", fontSize: 16 }}>
-              Complete Ride
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={{ color: "#fff", fontFamily: "Plus-Jakarta-Sans-Bold", fontSize: 16 }}>
+                Complete Ride
+              </Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={handleCancel}
+            disabled={loading}
             style={{
               borderWidth: 1.5,
               borderColor: "#ef4444",

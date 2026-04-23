@@ -4,7 +4,7 @@ import { neon } from "@neondatabase/serverless";
 export async function PATCH(request: Request) {
   try {
     const sql = neon(`${process.env.DATABASE_URL}`);
-    const { ride_id, status, driver_id } = await request.json();
+    const { ride_id, status, driver_id, clear_driver } = await request.json();
 
     if (!ride_id || !status)
       return Response.json({ error: "Missing ride_id or status" }, { status: 400 });
@@ -14,6 +14,13 @@ export async function PATCH(request: Request) {
       rows = await sql`
         UPDATE rides
         SET status = ${status}, driver_id = ${driver_id}
+        WHERE ride_id = ${ride_id}
+        RETURNING *
+      `;
+    } else if (clear_driver) {
+      rows = await sql`
+        UPDATE rides
+        SET status = ${status}, driver_id = NULL
         WHERE ride_id = ${ride_id}
         RETURNING *
       `;

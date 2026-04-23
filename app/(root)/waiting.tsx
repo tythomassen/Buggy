@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import Map from "@/components/Map";
 import { fetchAPI } from "@/lib/fetch";
+import MapView, { PROVIDER_DEFAULT } from "react-native-maps";
 
 export default function Waiting() {
   const { rideId } = useLocalSearchParams<{ rideId: string }>();
@@ -39,19 +39,34 @@ export default function Waiting() {
 
   const handleCancel = async () => {
     if (pollRef.current) clearInterval(pollRef.current);
-    await fetchAPI("/(api)/ride/update", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ride_id: rideId, status: "cancelled" }),
-    });
+    try {
+      await fetchAPI("/(api)/ride/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ride_id: rideId, status: "cancelled" }),
+      });
+    } catch (err) {
+      console.error("Cancel error:", err);
+    }
     router.replace("/(root)/(tabs)/home");
   };
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        <Map />
-      </View>
+      <MapView
+        provider={PROVIDER_DEFAULT}
+        style={{ flex: 1 }}
+        mapType="mutedStandard"
+        showsPointsOfInterest={false}
+        userInterfaceStyle="light"
+        showsUserLocation={true}
+        initialRegion={{
+          latitude: 38.939,
+          longitude: -74.911,
+          latitudeDelta: 0.014,
+          longitudeDelta: 0.014,
+        }}
+      />
 
       <SafeAreaView edges={["bottom"]} style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}>
         <View

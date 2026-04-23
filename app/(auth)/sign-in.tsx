@@ -41,13 +41,20 @@ const SignIn = () => {
 
   const routeByRole = async (clerkId: string) => {
     try {
-      const { role } = await fetchAPI(`/(api)/user/${clerkId}`);
+      console.log("[routeByRole] fetching role for clerkId:", clerkId);
+      const result = await fetchAPI(`/(api)/user/${clerkId}`);
+      console.log("[routeByRole] API response:", JSON.stringify(result));
+      const { role } = result;
+      console.log("[routeByRole] role:", role);
       if (role === "driver") {
+        console.log("[routeByRole] routing to driver dashboard");
         router.replace("/(root)/(driver)/dashboard");
       } else {
+        console.log("[routeByRole] routing to rider home");
         router.replace("/(root)/(tabs)/home");
       }
-    } catch {
+    } catch (err) {
+      console.error("[routeByRole] error:", err);
       router.replace("/(root)/(tabs)/home");
     }
   };
@@ -128,7 +135,7 @@ const SignIn = () => {
       }
     } catch (err: any) {
       console.log(JSON.stringify(err, null, 2));
-      Alert.alert("Error", err.errors[0].longMessage);
+      Alert.alert("Error", err.errors?.[0]?.longMessage ?? "Sign in failed. Please try again.");
     }
   }, [isLoaded, form.email, form.password]);
 
@@ -138,7 +145,11 @@ const SignIn = () => {
     try {
       const result = await googleOAuth(startGoogleOAuthFlow);
       if (result.code === "session_exists" || result.success) {
-        router.replace("/(root)/(tabs)/home"); // Google OAuth — default to rider
+        if (result.userId) {
+          await routeByRole(result.userId);
+        } else {
+          router.replace("/(root)/(tabs)/home");
+        }
         return;
       }
       Alert.alert("Error", result.message);
@@ -151,12 +162,16 @@ const SignIn = () => {
     if (oauthLoading) return;
     setOauthLoading(true);
     try {
-      const { createdSessionId, setActive } = await startAppleOAuthFlow({
+      const { createdSessionId, setActive, createdUserId } = await startAppleOAuthFlow({
         redirectUrl: "myapp://",
       });
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
-        router.replace("/(root)/(tabs)/home"); // Apple OAuth — no userId available, default to rider
+        if (createdUserId) {
+          await routeByRole(createdUserId);
+        } else {
+          router.replace("/(root)/(tabs)/home");
+        }
       }
     } catch (err: any) {
       console.error("Apple sign in error:", err);

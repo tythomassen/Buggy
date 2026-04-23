@@ -40,7 +40,18 @@ export async function POST(request: Request) {
       RETURNING *
     `;
 
-    return Response.json({ data: rows[0] }, { status: 201 });
+    const ride = rows[0];
+
+    // Ping all drivers (users with role = 'driver')
+    await sql`
+      INSERT INTO pings (ride_id, driver_clerk_id)
+      SELECT ${ride.ride_id}, clerk_id
+      FROM users
+      WHERE role = 'driver'
+      ON CONFLICT (ride_id, driver_clerk_id) DO NOTHING
+    `;
+
+    return Response.json({ data: ride }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating ride:", error);
     return Response.json({ error: error?.message ?? String(error) }, { status: 500 });

@@ -31,7 +31,7 @@ const slides = [
   },
   {
     id: 3,
-    title: "Your ride, your\nway. Let's go!",
+    title: "Your ride, your\n +way. Let's go!",
     description: "Enter your destination address and let us take care of the rest.",
     bg: require("@/assets/images/cape-may-beach.jpg"),
   },
