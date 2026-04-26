@@ -248,7 +248,7 @@ export default function Page() {
 
                 {[
                   { label: "My Rides", icon: icons.list, route: "/(root)/(tabs)/rides" },
-                  { label: "Chat", icon: icons.chat, route: "/(root)/(tabs)/chat" },
+                  { label: "Legal", icon: icons.list, route: "/(root)/(tabs)/legal" },
                   { label: "Profile", icon: icons.profile, route: "/(root)/(tabs)/profile" },
                 ].map((item) => (
                   <TouchableOpacity

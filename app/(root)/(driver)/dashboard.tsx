@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Switch,
   Text,
   TouchableOpacity,
@@ -30,6 +31,8 @@ export default function DriverDashboard() {
   const [online, setOnline] = useState(false);
   const [rides, setRides] = useState<PendingRide[]>([]);
   const [accepting, setAccepting] = useState(false);
+  const [simulating, setSimulating] = useState(false);
+  const [simUsed, setSimUsed] = useState(false);
   const [currentRide, setCurrentRide] = useState<PendingRide | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mapRef = useRef<MapView>(null);
@@ -77,6 +80,24 @@ export default function DriverDashboard() {
       animated: true,
     });
   }, [rides.length]);
+
+  const handleSimulate = async () => {
+    if (!user?.id || simulating || simUsed) return;
+    setSimulating(true);
+    try {
+      await fetchAPI("/(api)/ride/simulate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ driverClerkId: user.id, count: 4 }),
+      });
+      await fetchPending();
+      setSimUsed(true);
+    } catch (err) {
+      console.error("Simulate error:", err);
+    } finally {
+      setSimulating(false);
+    }
+  };
 
   const handleAccept = async () => {
     if (!currentRide) return;
@@ -165,27 +186,17 @@ export default function DriverDashboard() {
                 longitude: Number(ride.origin_longitude),
               }}
               onPress={() => setCurrentRide(ride)}
+              anchor={{ x: 0.5, y: 1 }}
             >
-              <View
+              <Image
+                source={require("@/assets/icons/PingIcon.png")}
                 style={{
-                  backgroundColor: isSelected ? "#1a2e35" : "#dfc925",
-                  borderRadius: 20,
-                  paddingHorizontal: 10,
-                  paddingVertical: 6,
-                  borderWidth: 2,
-                  borderColor: isSelected ? "#dfc925" : "#1a2e35",
+                  width: isSelected ? 48 : 36,
+                  height: isSelected ? 48 : 36,
+                  opacity: isSelected ? 1 : 0.75,
                 }}
-              >
-                <Text
-                  style={{
-                    color: isSelected ? "#dfc925" : "#1a2e35",
-                    fontFamily: "Plus-Jakarta-Sans-Bold",
-                    fontSize: 12,
-                  }}
-                >
-                  Ping
-                </Text>
-              </View>
+                resizeMode="contain"
+              />
             </Marker>
           );
         })}
@@ -226,7 +237,29 @@ export default function DriverDashboard() {
               Driver Mode
             </Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            {online && (
+              <TouchableOpacity
+                onPress={handleSimulate}
+                disabled={simulating || simUsed}
+                style={{
+                  backgroundColor: simulating || simUsed ? "#374151" : "#dfc925",
+                  borderRadius: 8,
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                }}
+              >
+                <Text
+                  style={{
+                    color: simUsed ? "#6b7280" : "#1a2e35",
+                    fontFamily: "Plus-Jakarta-Sans-Bold",
+                    fontSize: 12,
+                  }}
+                >
+                  {simulating ? "..." : simUsed ? "Pings Sent" : "+ Sim Pings"}
+                </Text>
+              </TouchableOpacity>
+            )}
             <Text
               style={{
                 color: "#fff",

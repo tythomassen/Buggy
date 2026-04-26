@@ -73,11 +73,15 @@ export default function Layout() {
       />
       <Tabs.Screen
         name="chat"
+        options={{ href: null, headerShown: false }}
+      />
+      <Tabs.Screen
+        name="legal"
         options={{
-          title: "Chat",
+          title: "Legal",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.chat} focused={focused} />
+            <TabIcon source={icons.list} focused={focused} />
           ),
         }}
       />
